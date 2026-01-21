@@ -1,538 +1,720 @@
-# Rust Notes
+RUST NOTES
+==========
 
-## Tooling
+TOOLING
+=======
 
-rustc        - compiler
-rustup       - CLI for managing Rust versions and associated tools
-  - linker   - combines compiled output into a single file
-  - C compiler - some packages depend on C code
-rust-analyzer - IDE support
-rustfmt      - automatic formatter
+- rustc             compiler
+- rustup            CLI for managing Rust versions and tools
+    - linker        combines compiled output into single file
+    - C compiler    some packages depend on C code
+- rust-analyzer     IDE support
+- rustfmt           automatic formatter
 
-## Cargo
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Commands:
-  cargo new                           - create binary crate; '--lib' creates library crate
-  cargo build                         - build debug
-  cargo build --release               - build release
-  cargo run                           - build and run
-  cargo check                         - quickly check if compiles
-  cargo doc --open                    - open documentation for all dependencies locally
-  cargo test                          - build a test runner that runs the annotated functions and reports
-  cargo test -- --test-threads=1      - run all tests sequentially; opts after 1st -- go to test binary
-  cargo test -- --show-output         - show printed stuff for passing tests; by default, only failed tests' prints show up
-  cargo test <test_name>              - run specific test
-  cargo test <pattern>                - run tests whose name matches pattern
-  cargo test tests::                  - run all tests in module
-  cargo test -- --ignored             - run ignored tests
-  cargo test -- --include-ignored     - run all, including ignored
-  cargo test --test integration_test  - run a single integration test file
+CARGO
+=====
 
-Config:
-  TOML (Tom's Obvious, Minimal Language)
-  Cargo.lock - tracks exact versions of dependencies
-  0.8.5 is shorthand for ^0.8.5 (any version >= 0.8.5 but < 0.9.0)
+Commands
+--------
 
-## Standard Library
+        cargo new                           create binary crate; --lib for library
+        cargo build                         build debug
+        cargo build --release               build release
+        cargo run                           build and run
+        cargo check                         quickly check if compiles
+        cargo doc --open                    open docs for all dependencies locally
+        cargo test                          build test runner, run annotated functions
+        cargo test -- --test-threads=1      run all tests sequentially
+        cargo test -- --show-output         show printed output for passing tests
+        cargo test <test_name>              run specific test
+        cargo test <pattern>                run tests matching pattern
+        cargo test tests::                  run all tests in module
+        cargo test -- --ignored             run ignored tests
+        cargo test -- --include-ignored     run all, including ignored
+        cargo test --test integration_test  run single integration test file
 
-prelude - items from std auto-imported into every program
+Config
+------
 
-String  - growable, UTF-8 encoded text
-int     - i32 by default
+TOML (Tom's Obvious, Minimal Language) for configuration. Cargo.lock tracks
+exact dependency versions. Version 0.8.5 is shorthand for ^0.8.5 (>=0.8.5, <0.9.0).
 
-## Language Features
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Naming:
-  use underscores to separate words in filenames
-  type-naming convention is UpperCamelCase (`fn largest<T>(..)`)
+STANDARD LIBRARY
+================
 
+Prelude
+-------
 
-Macros: identified by `!`
+Items auto-imported into every program:
 
-Variables:
-  - immutable by default
-  - mutability (`mut`) vs shadowing (`let`):
-      mut: same var, same type       shadowing: type can change
-      let mut var = ...;             let var = ...;
-      var = ...;                     let var = ...;
+- Option, Some, None
+- Result, Ok, Err
+- Vec, String, Box
+- Clone, Copy, Drop
+- Default, PartialEq, Eq, PartialOrd, Ord
+- Iterator, IntoIterator
+- From, Into, AsRef, AsMut
+- ToOwned, ToString
+- fn, mod, struct, enum, trait, impl, pub, use, etc.
 
-References (&):
-  - immutable by default
-  - use `mut` for mutability
+Primitive Types
+---------------
+
+- bool, char, str
+- i8, i16, i32, i64, i128, isize
+- u8, u16, u32, u64, u128, usize
+- f32, f64
+- array [T; N], slice [T], tuple (), pointer *const/*mut
+
+Core Types
+----------
+
+- String         owned, growable, UTF-8 text
+- &str           borrowed string slice
+- Vec<T>         growable array
+- [T; N]         fixed-size array
+- Option<T>      Some(T) or None
+- Result<T, E>   Ok(T) or Err(E)
+
+Smart Pointers
+--------------
+
+- Box<T>         heap allocation, single owner
+- Rc<T>          reference counted, single-threaded, immutable
+- Arc<T>         atomic ref counted, thread-safe, immutable
+- RefCell<T>     interior mutability, runtime borrow checking
+- Mutex<T>       mutual exclusion, thread-safe
+- RwLock<T>      multiple readers or single writer
+
+Common Traits
+-------------
+
+- Clone          explicit .clone()
+- Copy           implicit bitwise copy (stack types)
+- Drop           destructor, cleanup when out of scope
+- Default        default value via Default::default()
+- Debug          {:?} formatting
+- Display        {} formatting
+- PartialEq/Eq   equality comparison (==, !=)
+- PartialOrd/Ord ordering comparison (<, >, <=, >=)
+- Iterator       .next() -> Option<Item>
+- From/Into      type conversion
+- Deref          smart pointer dereferencing
+
+Key Modules
+-----------
+
+- std::collections   HashMap, HashSet, BTreeMap, VecDeque, LinkedList
+- std::io            Read, Write, stdin, stdout, BufReader
+- std::fs            File, read_to_string, write, create_dir
+- std::env           args, vars, current_dir
+- std::path          Path, PathBuf
+- std::thread        spawn, sleep, JoinHandle
+- std::sync          Mutex, Arc, mpsc channels
+- std::time          Duration, Instant, SystemTime
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+LANGUAGE FEATURES
+=================
 
 Naming
-  const - uppercase with underscores between words
-  fn, vars - snake case where all letters are lowercase and underscores separate words
+------
 
-## Types
+- filenames             underscores to separate words
+- types                 UpperCamelCase
+- constants             SCREAMING_SNAKE_CASE
+- functions/variables   snake_case
 
-Scalar: Integer, floating point, boolean and char
+Macros - identified by !
 
-Int
-  Length	                Signed	    Unsigned
-  ------------------------------------------------
-  8-bit	                  i8	        u8
-  16-bit	                i16	        u16
-  32-bit	                i32	        u32
-  64-bit	                i64	        u64
-  128-bit	                i128	      u128
-  Architecture-dependent	isize	      usize     // 64 bits if you’re on a 64-bit architecture
+Variables
+---------
 
-  Signed      −(2^(n − 1)) to 2^(n − 1) − 1     // two’s complement representation
-  Unsigned    0 to 2^(n − 1)
+IMMUTABLE BY DEFAULT. Two ways to reassign:
 
-  Number literals	  Example
-  ---------------------------
-  Decimal	          98_222
-  Hex	              0xff
-  Octal	            0o77
-  Binary	          0b1111_0000
-  Byte (u8 only)	  b'A'
++---------------------+---------------------+
+| Mutability (mut)    | Shadowing (let)     |
++---------------------+---------------------+
+| same var, same type | type can change     |
+| let mut var = ..;   | let var = ..;       |
+| var = ..;           | let var = ..;       |
++---------------------+---------------------+
 
-  Integer division truncates toward zero to the nearest integer.
+References (&) - immutable by default; use mut for mutability
 
-Float
-  f32 and f64     // IEEE-754 standard
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Boolean
-  bool (true/false)
+TYPES
+=====
 
-Char
-  char // single quotes; 4 bytes in size and represents a Unicode scalar value
+SCALAR TYPES: integer, floating point, boolean, char
 
-Compound Types: tuples and arrays
+Integer
+-------
 
-Tuple
-  multiple types, fixed in size, `(..)`
++----------+--------+----------+
+| Length   | Signed | Unsigned |
++----------+--------+----------+
+| 8-bit    | i8     | u8       |
+| 16-bit   | i16    | u16      |
+| 32-bit   | i32    | u32      |
+| 64-bit   | i64    | u64      |
+| 128-bit  | i128   | u128     |
+| arch     | isize  | usize    |
++----------+--------+----------+
 
-  The tuple without any values has a special name, unit aka `()`
-  Expressions implicitly return the unit value if they don’t return any other value
+Signed range:   -(2^(n-1)) to 2^(n-1)-1   (two's complement)
+Unsigned range: 0 to 2^n-1
 
-Array
-  same type, fixed length, `[..]`, allocated on stack
+Overflow/Underflow (wrapping behavior):
 
-  let a = [1, 2, 3, 4, 5];
-  let a: [i32; 5] = [1, 2, 3, 4, 5];    // explicit type
-  let a = [3; 5];                       // 3 repeated 5 times
+u8 (range: 0 to 255)
++------------+-------+-------------+-------+
+| underflow  | wraps | overflow    | wraps |
++------------+-------+-------------+-------+
+| -1         | 255   | 256         | 0     |
+| -2         | 254   | 257         | 1     |
++------------+-------+-------------+-------+
 
-  every access is bound-checked; avoid this with `for` or assert
+i8 (range: -128 to 127)
++------------+-------+-------------+-------+
+| underflow  | wraps | overflow    | wraps |
++------------+-------+-------------+-------+
+| -129       | 127   | 128         | -128  |
+| -130       | 126   | 129         | -127  |
++------------+-------+-------------+-------+
 
-## Functions
+In DEBUG mode, overflow PANICS. In RELEASE mode, it wraps silently.
+Use wrapping_*, checked_*, saturating_*, overflowing_* methods for explicit control.
 
-In function signatures, you must declare the type of each parameter and type of their return value after an arrow (->).
-Implicit return value is the value of the final expression in the block of the body of a function
++-------------+-----------+
+| Literal     | Example   |
++-------------+-----------+
+| Decimal     | 98_222    |
+| Hex         | 0xff      |
+| Octal       | 0o77      |
+| Binary      | 0b1111_00 |
+| Byte (u8)   | b'A'      |
++-------------+-----------+
 
-Statements
-  instructions that perform some action and do not return a value. end with `;`
-  eg var creation/assignment; function definitions
+Integer division truncates toward zero.
 
-Expressions
-  evaluate to a resultant value. do not end with `;`. can be part of statements
-  eg calling macro, fn; a new scope block created with curly brackets
+Float   - f32 and f64 (IEEE-754)
+Boolean - bool (true/false)
+Char    - single quotes, 4 bytes, Unicode scalar value
 
-## Control flow
+COMPOUND TYPES: tuples and arrays
 
-if
+Tuple - multiple types, fixed size, (..)
+        empty tuple () is called UNIT
+        expressions return unit if no other value returned
 
-loop, while, for and break, continue.
-  can return values
-  can have labels and those labels can used with break/continue
+Array - same type, fixed length, [..], stack-allocated
 
-## Ownership
+        let a = [1, 2, 3, 4, 5];
+        let a: [i32; 5] = [1, 2, 3, 4, 5];    // explicit type
+        let a = [3; 5];                       // 3 repeated 5 times
+
+Every access is bounds-checked; avoid overhead with for loops or assertions.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+FUNCTIONS
+=========
+
+Signatures MUST declare parameter types and return type (after ->).
+Implicit return is the final expression in the function body.
+
+Statements - perform actions, no return value, end with ;
+             eg: var creation/assignment, function definitions
+
+Expressions - evaluate to a value, NO semicolon, can be part of statements
+              eg: macro/fn calls, scope blocks {}
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+CONTROL FLOW
+============
+
+if, loop, while, for, break, continue
+
+Loops can return values and have labels for use with break/continue.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+OWNERSHIP
+=========
 
 Rules
-  1. Each value has an owner
-  2. Only one owner at a time
-  3. Value dropped when owner goes out of scope
+-----
+
+1. Each value has an owner
+2. Only one owner at a time
+3. Value dropped when owner goes out of scope
 
 Memory
-  stack: fixed-size, fast, LIFO
-  heap: dynamic size, slower, requires allocation
+------
 
-Move Semantics
-  assigning heap data (eg String) moves ownership, invalidating the original
+- stack   fixed-size, fast, LIFO
+- heap    dynamic size, slower, requires allocation
+
+Move Semantics - assigning heap data (eg String) MOVES ownership,
+                 invalidating the original
 
 Copy
-  Copy trait: stack-only types (integers, bools, chars) copied automatically
-  Copy and Drop traits are mutually exclusive — if a type needs cleanup, it can't be Copy
-  .clone(): explicit deep copy for heap data
+----
 
-Functions
-  passing a value moves it (unless Copy)
-  returning a value transfers ownership out
+- Copy trait: stack-only types (integers, bools, chars) copied automatically
+- Copy and Drop traits are MUTUALLY EXCLUSIVE
+- .clone(): explicit deep copy for heap data
 
-## References & Borrowing
+Functions - passing a value moves it (unless Copy)
+            returning a value transfers ownership out
 
-Basics (`&`)
-  use value without owning it
-  scope ends at last usage, not end of block
-  immutable by default
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Immutable (`&T`)
-  cannot modify borrowed value
-  multiple allowed simultaneously
+REFERENCES & BORROWING
+======================
 
-Mutable (`&mut T`)
-  requires `mut` on both variable and reference
-  allows modification
-  only one at a time
+Basics (&)
+----------
+
+- use value without owning it
+- scope ends at last usage, not end of block
+- immutable by default
+
+Immutable (&T)
+--------------
+
+- cannot modify borrowed value
+- multiple allowed simultaneously
+
+Mutable (&mut T)
+----------------
+
+- requires mut on both variable and reference
+- allows modification
+- ONLY ONE at a time
 
 Borrowing Rules
-  1. either one `&mut T` OR any number of `&T` — never both
-  2. references must always be valid (no dangling pointers)
+---------------
 
-Slice (`[starti..endi]`)
-  a reference to a contiguous sequence in a collection
-  used to tie reference to underlying data, compiler enforcing borrowing rules
-  immutable by default and mutable with `mut`
+1. Either one &mut T OR any number of &T - NEVER BOTH
+2. References must always be valid (no dangling pointers)
 
-## Structs
+Slice ([start..end])
+--------------------
+
+- reference to contiguous sequence in a collection
+- ties reference to underlying data, compiler enforces borrowing rules
+- immutable by default, mutable with mut
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+STRUCTS
+=======
 
 Basics
-  immutable by default; entire instance must be `mut` to modify any field
-  own their data (`String` not `&str`); references require lifetimes
+------
+
+- immutable by default; entire instance must be mut to modify any field
+- own their data (String not &str); references require lifetimes
 
 Variants
-  regular       struct Point { x: i32, y: i32 }
-  tuple         struct Color(i32, i32, i32);      // named tuple, fields accessed by index
-  unit-like     struct AlwaysEqual;               // no data, useful for trait impls
+--------
+
+        struct Point { x: i32, y: i32 }       // regular
+        struct Color(i32, i32, i32);          // tuple struct
+        struct AlwaysEqual;                   // unit-like
 
 Syntax
-  field init shorthand    Point { x, y }          // when var name matches field
-  struct update           Point { x: 1, ..other } // partial move possible
+------
+
+- field init shorthand    Point { x, y }          when var name matches field
+- struct update           Point { x: 1, ..other } partial move possible
 
 Debug/Display
-  `#[derive(Debug)]` enables `{:?}` and `{:#?}` (pretty)
-  `Display` trait required for `{}`
-  `dbg!(&x)` prints file:line and value to stderr
+-------------
 
-Methods (`impl`)
-  `&self`      immutable borrow (common)
-  `&mut self`  mutable borrow
-  `self`       takes ownership (rare)
-  `Self`       alias for impl type
-  auto ref/deref on method calls (adds `&`, `&mut`, `*` as needed)
+- #[derive(Debug)] enables {:?} and {:#?} (pretty)
+- Display trait required for {}
+- dbg!(&x) prints file:line and value to stderr
 
-Associated Functions
-  no `self` param; called via `Type::func()`; often constructors (`new`)
+Methods (impl)
+--------------
 
-## Enum
+- &self       immutable borrow (common)
+- &mut self   mutable borrow
+- self        takes ownership (rare)
+- Self        alias for impl type
+- auto ref/deref on method calls (adds &, &mut, * as needed)
+
+Associated Functions - no self param; called via Type::func(); often constructors
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ENUMS
+=====
 
 Syntax
-  `enum Name { Variant1, Variant2 }`
-  access via `Name::Variant`
-  variants can hold data: `V4(String)` or `V4(u8, u8, u8, u8)`
-  each variant can have different types/amounts of data
-  variant names become constructor functions
-  can hold structs, other enums, any type
+------
 
-Methods on Enums
-  use `impl` blocks just like structs
+        enum Name { Variant1, Variant2 }
 
-The `Option<T>` Enum
-  Rust has no null; uses `Option` instead
-  `Some(T)` — value present
-  `None` — value absent
+- access via Name::Variant
+- variants can hold data: V4(String) or V4(u8, u8, u8, u8)
+- each variant can have different types/amounts of data
+- variant names become constructor functions
+- can hold structs, other enums, any type
+- use impl blocks for methods, just like structs
 
-`match`
-  compare value against patterns, execute matching arm
-  arms checked in order; first match wins
-  entire `match` is an expression (returns a value)
+Option<T>
+---------
 
-  patterns can bind to inner values
-  `Some(i) => i + 1` extracts `i` from `Some`
+Rust has NO NULL; uses Option instead:
+- Some(T)   value present
+- None      value absent
 
-  must handle all possible cases, compiler enforcing this
+match
+-----
 
-  catch all patterns (must be last arm)
-  `other => ...` — matches anything, binds value
-  `_ => ...` — matches anything, ignores value
-  `_ => ()` — do nothing
+- compare value against patterns, execute matching arm
+- arms checked in order; first match wins
+- entire match is an expression (returns a value)
+- patterns can bind to inner values: Some(i) => i + 1
+- MUST handle all possible cases (compiler enforced)
 
-`if let`
-  syntax sugar for `match` with one arm + catch-all
-  `if let Some(x) = value { ... }`
-  less verbose, but loses exhaustiveness checking
-  can add `else` block (equivalent to `_` arm)
+Catch-all patterns (MUST be last arm):
+- other => ...    matches anything, binds value
+- _ => ...        matches anything, ignores value
+- _ => ()         do nothing
 
-`let...else`
-  bind on match, otherwise exit early
-  `let Some(x) = value else { return None; };`
-  `else` branch must diverge (return, break, panic, etc.)
-  keeps "happy path" unindented
+if let
+------
+
+Sugar for match with one arm + catch-all:
+
+        if let Some(x) = value { ... }
+
+Less verbose, but loses exhaustiveness checking. Can add else block.
+
+let...else
+----------
+
+Bind on match, otherwise exit early:
+
+        let Some(x) = value else { return None; };
+
+else branch MUST diverge (return, break, panic, etc.)
+Keeps happy path unindented.
 
 When to Use
-  `match` — need exhaustiveness or multiple arms
-  `if let` — care about one pattern, ignore rest
-  `let...else` — extract value or bail out early
+-----------
 
-## Packages, Crates and Modules
+- match       need exhaustiveness or multiple arms
+- if let      care about one pattern, ignore rest
+- let...else  extract value or bail out early
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+PACKAGES, CRATES AND MODULES
+============================
 
 package -> crate(s) -> module(s)
 
 Definitions
-  crate - smallest amount of code compiler considers at a time; could be binary (src/main.rs) or library type (src/lib.rs)
-  package - a bundle of one or more crates with Cargo.toml; can contain many binary (`src/main.rs` and `src/bin/*.rs`) and only one library crate (`src/lib.rs`)
+-----------
+
+- crate     smallest compilation unit; binary (src/main.rs) or library (src/lib.rs)
+- package   bundle of crates with Cargo.toml; many binaries allowed
+            (src/main.rs and src/bin/*.rs), only one library (src/lib.rs)
 
 Module
-  implicit `crate` root
-  private by default; use `pub` to expose (modules, functions, methods, structs and enums)
-  `mod name;` looks for code in: 1) inline `mod name { ... }`; 2) `src/name.rs`; 3) `src/name/mod.rs`
+------
+
+- implicit crate root
+- PRIVATE by default; use pub to expose (modules, functions, methods, structs, enums)
+- mod name; looks for:
+        1) inline mod name { ... }
+        2) src/name.rs
+        3) src/name/mod.rs
 
 Path
-  abs (`crate::`) and relative types (start with the current module)
-  `super` goes up, starting from parent module
+----
 
-  all items private by default
-  parent modules cannot see private child items while child modules can see ancestor items
-  `pub struct` — struct public, fields still private individually
-  `pub enum` — all variants automatically public
+- absolute (crate::) and relative (start from current module)
+- super goes up, starting from parent module
+- all items private by default
+- parent modules CANNOT see private child items
+- child modules CAN see ancestor items
+- pub struct - struct public, fields still private individually
+- pub enum - all variants automatically public
 
-  `use path::to::item;` creates shortcut in current scope
-  functions — import parent module: `use module; module::func()`
-  structs/enums — import item directly: `use std::collections::HashMap;`
-  same-name conflicts — keep parent module or use `as`
+use
+---
 
-  `pub use` (re-exporting)
+        use path::to::item;     creates shortcut in current scope
 
-  // nested paths
-  `use std::{cmp::Ordering, io};`
-  `use std::io::{self, Write};` — imports `io` and `io::Write`
+- functions     import parent module: use module; module::func()
+- structs/enums import item directly: use std::collections::HashMap;
+- same-name conflicts - keep parent module or use as
 
-  // bring everything
-  `use std::collections::*;`
+        pub use                 re-exporting
+        use std::{cmp::Ordering, io};                   nested paths
+        use std::io::{self, Write};                     imports io and io::Write
+        use std::collections::*;                        bring everything
 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-## Collections
+COLLECTIONS
+===========
 
 Vector
-  new(), vec!
+------
 
-  in accessing items, if the index is outside of the range, `[]` panics while `get(index)` return None
-
-  vector is immutable by default and each member is immutable even if vector is mutable;
-  so to change items, you need both vector and item to have `mut`
+- new(), vec![]
+- accessing: [] panics on out-of-bounds, get(index) returns None
+- vector immutable by default; to change items, need both vector and item mut
 
 String
-  `str` - string slice, in core language, referenes string data stored elsewhere, usually from literal
-  `String` - owned, growable, UTF-8 encoded, variable-length collection of bytes
-  designed to handle the full range of Unicode characters efficiently
+------
 
-  Character Type          Example	    UTF-8 Byte Size per Char
-  ------------------------------------------------------------
-  ASCII	                  a, 1, $	    1 byte
-  Cyrillic/Greek/Arabic	  Д, Ω, ش	    2 bytes
-  CJK/Devanagari	        桁, अ	      3 bytes
-  Emojis/Rare scripts	    🦀, 𐀀	      4 bytes
+- str       string slice, in core language, references string data stored elsewhere
+- String    owned, growable, UTF-8 encoded, variable-length bytes
 
-  new(), from(), to_string()
++----------------------+---------+------------------------+
+| Character Type       | Example | UTF-8 Bytes per Char   |
++----------------------+---------+------------------------+
+| ASCII                | a, 1, $ | 1 byte                 |
+| Cyrillic/Greek/Arabic| Д, Ω,   | 2 bytes                |
+| CJK/Devanagari       | 桁, अ   | 3 bytes                |
+| Emojis/Rare scripts  | 𐀀       | 4 bytes                |
++----------------------+---------+------------------------+
 
-  // updating
-  push(), push_str()
-  `+`       // takes ownership of 1st param
-  format!   // no ownership taken
+- new(), from(), to_string()
+- push(), push_str()
+- +         takes ownership of 1st param
+- format!   no ownership taken
 
-  // views
-  bytes — `s.bytes()` → raw `u8` values
-  scalar values — `s.chars()` → Unicode code points
-  grapheme clusters — use external crate
+Views:
+- bytes           s.bytes() -> raw u8 values
+- scalar values   s.chars() -> Unicode code points
+- grapheme clusters - use external crate
 
-  // slicing
-  [start..end] // byte range, returns `&str`; panics if range splits a multi-byte char
+Slicing: [start..end] byte range, returns &str; PANICS if range splits multi-byte char
 
-Hashmap
-  uses SipHash by default; custom hasher via `BuildHasher` trait
+HashMap
+-------
 
-  `Copy` types are copied in; owned types (eg String) moved; references require lifetimes
+Uses SipHash by default; custom hasher via BuildHasher trait.
+Copy types copied in; owned types (eg String) moved; references require lifetimes.
 
-  // ownership
-  `get(&key)` → `Option<&V>`
-  `get(&key).copied().unwrap_or(default)` for owned value
+- get(&key)                             Option<&V>
+- get(&key).copied().unwrap_or(default) for owned value
+- insert()                              insert key-value, overwrites if key exists
+- entry().or_insert()                   add only if key absent; returns &mut V
 
-  // updating
-  insert()              // insert key-value, overwrites the value if the key exists
-  entry().or_insert()   // add key-value only if the key doesn't exist; returns `&mut V`
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ERRORS
+======
 
-## Errors
+Recoverable - Result<T, E>
+--------------------------
 
-recoverable using `Result<T, E>`
-  // handling
-  `match` with `Result<T, E>`
-  closure and unwrap_or_else()
-  unwrap()          // unwrap T on success or `panic!` on error
-  expect(msg)       // similar to unwrap but with helpful msg
-  ? operator        // returns Ok value or propagates Err; calls From::from for conversion; returns type must be Result, Option
+- match with Result<T, E>
+- closure and unwrap_or_else()
+- unwrap()        unwrap T on success or panic! on error
+- expect(msg)     similar to unwrap but with helpful msg
+- ? operator      returns Ok value or propagates Err
+                  calls From::from for conversion
+                  return type must be Result, Option
 
-unrecoverable with `panic!`
-  cleans up stack by default; `panic = 'abort'` for immediately aborting
+Unrecoverable - panic!
+----------------------
 
-  // good for
-  bad state, security or contract violation
+Cleans up stack by default; panic = 'abort' for immediately aborting.
 
+Good for: bad state, security or contract violation.
 
-## Generics
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Generic functions, structs and enums
-  syntax is declare type params in `<>` after name
+GENERICS
+========
 
-  ```rust
-  // in functions
-  fn largest<T>(list: &[T]) -> &T { /* .. */ }
+Generic functions, structs and enums - declare type params in <> after name
 
-  // in structs
-  struct Point<T>     { x: T, y: T, }   // single generic type
-  struct Point<T, U>  { x: T, y: U, }   // multiple generic types
+        // functions
+        fn largest<T>(list: &[T]) -> &T { .. }
 
-  // in methods
-  impl<T> Point<T> { /* methods using T */ }
-  impl Point<f32> { /* methods using f32 */ } // f32 is handled uniquely
-  // method can introduce its own generic params; eg fn mixup<X2, Y2>(...)
+        // structs
+        struct Point<T>     { x: T, y: T }    single generic type
+        struct Point<T, U>  { x: T, y: U }    multiple generic types
 
-  // in enums
-  enum Result<T, E> {
-      Ok(T),
-      Err(E),
-  }
-  ```
+        // methods
+        impl<T> Point<T> { .. }               methods using T
+        impl Point<f32> { .. }                f32 handled uniquely
+        // method can introduce own generic params: fn mixup<X2, Y2>(...)
 
-  generics have zero runtime cost - monomorphization generates specialized code at compile time
+        // enums
+        enum Result<T, E> { Ok(T), Err(E) }
+
+Generics have ZERO RUNTIME COST - monomorphization generates specialized code
+at compile time.
 
 Traits
-  like interfaces - define shared behavior across types
-  orphan rule: can only impl trait if trait or type is local to your crate
+------
 
-  implementing a trait on type and using default impl
-  ```rust
-  trait Summary {
-    fn summarize(&self) -> String;
+Like interfaces - define shared behavior across types.
+ORPHAN RULE: can only impl trait if trait or type is local to your crate.
 
-    fn func_with_default_behavior(params) -> returnType {
-      /* .. */
-      summarize(); // can call other methods in the same trait
-      /* .. */
-    }
-  }
+        trait Summary {
+            fn summarize(&self) -> String;
 
-  impl Summary for Article {
-    fn summarize(&self) -> String { /* .. */ }
-  }
+            fn func_with_default_behavior(..) -> .. {
+                // can call other methods in same trait
+                summarize();
+            }
+        }
 
-  impl Summary for Article {} // or use default impl
-  ```
+        impl Summary for Article {
+            fn summarize(&self) -> String { .. }
+        }
 
-  using traits as params
-  ```rust
-  pub fn notify(item: &impl Summary) { /* .. */ }   // sugar
-  pub fn notify<T: Summary>(item: &T) { /* .. */ }  // full (trait bound) syntax
+        impl Summary for Article {}     // use default impl
 
-  pub fn notify(item: &(impl Summary + Display)) { /* .. */ }   // multiple trait bounds (sugar)
-  pub fn notify<T: Summary + Display>(item: &T) { /* .. */ }    // multiple trait bounds (full)
+Traits as params:
 
-  fn some_function<T, U>(t: &T, u: &U) -> i32     // where syntax
-  where
-    T: Display + Clone,
-    U: Clone + Debug,
-  { /* .. */ }
-  ```
+        pub fn notify(item: &impl Summary) { .. }           // sugar
+        pub fn notify<T: Summary>(item: &T) { .. }          // trait bound syntax
 
-  returning types that implement traits; especially useful in the context of closures and iterators
-  ```rust
-  fn make() -> impl Summary { /* .. */ }  // returns some type implementing Summary trait
-                                          // limitation is must return single concrete type
-  ```
+        pub fn notify(item: &(impl Summary + Display)) { .. }   // multiple (sugar)
+        pub fn notify<T: Summary + Display>(item: &T) { .. }    // multiple (full)
 
-  trait conditional method implementation
-  ```rust
-  impl<T> Pair<T> {
-    fn new(x: T, y: T) -> Self { /* .. */ }   // always available
-  }
+        fn some_function<T, U>(t: &T, u: &U) -> i32          // where syntax
+        where
+            T: Display + Clone,
+            U: Clone + Debug,
+        { .. }
 
-  impl<T: Display + PartialOrd> Pair<T> {
-    fn cmp_display(&self) { /* .. */ }        // only availabe if T implements Display and PartialOrder traits
-  }
-  ```
+Returning types that implement traits:
 
-  blanket implementations - used extensively in the std
-  ```rust
-  impl<T: Display> ToString for T { /* .. */ }  // availabe for any T that implements Display trait
-  ```
+        fn make() -> impl Summary { .. }    // MUST return single concrete type
+
+Conditional method implementation:
+
+        impl<T> Pair<T> {
+            fn new(x: T, y: T) -> Self { .. }               // always available
+        }
+
+        impl<T: Display + PartialOrd> Pair<T> {
+            fn cmp_display(&self) { .. }                    // only if T impls both
+        }
+
+Blanket implementations (used extensively in std):
+
+        impl<T: Display> ToString for T { .. }              // for any T with Display
 
 Lifetimes
-  prevent dangling references (in fn params/return or structs) - ensure refs don't outlive their data
-  borrow checker compares scopes to validate borrows
+---------
 
-  syntax
-  &i32            // reference (implicit lifetime)
-  &'a i32         // reference with explicit lifetime 'a
-  &'a mut i32     // mutable reference with lifetime 'a
+Prevent dangling references - ensure refs don't outlive their data.
+Borrow checker compares scopes to validate borrows.
 
-  ```rust
-  // in function definitions
-  fn longest<'a>(x: &'a str, y: &'a str) -> &'a str { /* .. */ }  // return lives as long as shortest input
-  fn always_first<'a>(x: &'a str, y: &str) -> &'a str             // y unrelated to return, no annotation needed
+Syntax:
+        &i32            reference (implicit lifetime)
+        &'a i32         reference with explicit lifetime 'a
+        &'a mut i32     mutable reference with lifetime 'a
 
-  // in structs
-  struct ImportantExcerpt<'a> { part: &'a str, }  // struct instance can't outlive the ref it holds
-  impl<'a> ImportantExcerpt<'a> { /* .. */ }      // declare 'a after impl and struct name
-  ```
+In function definitions:
 
-  lifetime elision rules - rules the compiler infers lifetimes for references whenever possible; after applying these rules,
-  if all refs in function params/return have lifetimes, you don't need to specify them manually
-    1) each ref param gets its own lifetime                               // fn f(x: &str, y: &str) => fn f<'a,'b>(x: &'a str, y: &'b str)
-    2) single input ref => its lifetime is assigned to all output refs    // fn f(x: &str) -> &str => fn f<'a>(x: &'a str) -> &'a str
-    3) method with &self => self's lifetime to outputs                    // fn f(&self, s: &str) -> &str uses self's lifetime
+        fn longest<'a>(x: &'a str, y: &'a str) -> &'a str { .. }
+        // return lives as long as shortest input
 
-  'static - means data the reference is referring to lives for the entire duration of the program
+        fn always_first<'a>(x: &'a str, y: &str) -> &'a str
+        // y unrelated to return, no annotation needed
 
-  Combined Syntax
-    fn f<'a, T>(x: &'a str, ann: T) -> &'a str where T: Display
+In structs:
 
+        struct ImportantExcerpt<'a> { part: &'a str }
+        // instance can't outlive the ref it holds
 
-## Tests
+        impl<'a> ImportantExcerpt<'a> { .. }
+        // declare 'a after impl and struct name
+
+Lifetime elision rules - compiler infers lifetimes when possible:
+
+1) each ref param gets its own lifetime
+   fn f(x: &str, y: &str) => fn f<'a,'b>(x: &'a str, y: &'b str)
+
+2) single input ref => its lifetime assigned to all output refs
+   fn f(x: &str) -> &str => fn f<'a>(x: &'a str) -> &'a str
+
+3) method with &self => self's lifetime to outputs
+   fn f(&self, s: &str) -> &str uses self's lifetime
+
+'static - data lives for ENTIRE DURATION of the program
+
+Combined syntax:
+
+        fn f<'a, T>(x: &'a str, ann: T) -> &'a str where T: Display
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+TESTS
+=====
 
 Writing tests
-  ```rust
-  #[cfg(test)]              // test module, only compiled for `cargo test`
-  mod tests {
-    use super::*;
+-------------
 
-    #[test]                 // marks this function as test
-    fn make() { /* .. */ }
-  }
-  ```
+        #[cfg(test)]              // test module, only compiled for cargo test
+        mod tests {
+            use super::*;
 
-  // asserts - types need PartialEq + Debug traits for asserts to work
-  assert!(expr, msg)                            // passes if true, panics if false
-  assert_eq!(left, right, msg)                  // passes if equal, prints both on fail
-  assert_ne!(left, right, msgw)                 // passes if not equal, prints both on success
+            #[test]               // marks function as test
+            fn make() { .. }
+        }
 
-  // testing panics
-  #[should_panic]                                     // pass if code panics (any panic!)
-  #[should_panic(expected = "substring")]             // helps you to be more precise, matching panic msg with "substring"
+Asserts - types need PartialEq + Debug traits:
 
-  // Result<T, E> based tests
-  ```rust
-  #[test]
-  fn make() -> Result<(), String> { /* .. */ }  // `Ok(())` on success, `Err` with string on failure; allows using `?` in tests
-  ```
+        assert!(expr, msg)                passes if true, panics if false
+        assert_eq!(left, right, msg)      passes if equal, prints both on fail
+        assert_ne!(left, right, msg)      passes if not equal
+
+Testing panics:
+
+        #[should_panic]                         pass if code panics (any panic!)
+        #[should_panic(expected = "substring")] match panic msg with "substring"
+
+Result<T, E> based tests:
+
+        #[test]
+        fn make() -> Result<(), String> { .. }
+        // Ok(()) on success, Err with string on failure; allows ? in tests
 
 Running tests
-  ```rust
-  #[test]
-  #[ignore]
-  fn expensive_test() { /* .. */ }    // now skipped by default
-  ```
+-------------
+
+        #[test]
+        #[ignore]
+        fn expensive_test() { .. }      // skipped by default
 
 Organizing tests
+----------------
 
-  // unit tests
-  same file as code, in `#[cfg(test)] mod tests { /* .. */ }`
-  can test private functions (`use super::*`)
+Unit tests:
+- same file as code, in #[cfg(test)] mod tests { .. }
+- can test private functions (use super::*)
 
-  // integration tests
-  `tests/` directory at project root
-  each file compiled as separate crate
-  `tests/common/mod.rs` where shared helpers should live
+Integration tests:
+- tests/ directory at project root
+- each file compiled as separate crate
+- tests/common/mod.rs for shared helpers
 
-  can't integration test binary crates directly, so put logic in src/lib.rs, keep main.rs thin
+CANNOT integration test binary crates directly - put logic in src/lib.rs,
+keep main.rs thin.
