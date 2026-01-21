@@ -1,22 +1,22 @@
 # learning rust
 
 [1/14/26 - 1/27/26]
-rust book - front-to-back, back-to-front, random order (two week)
+rust book & brown book - front-to-back, back-to-front, random order (two weeks)
 * helps you closely read as much surface as possible (unblocking yourself with LLM whenever stuck)
-* capture direct (what’s being said) and indirect information (what the said thing implies)
+* capture direct (what’s being said) and indirect information (other side of the said thing)
 * take notes and polish
-* ------------------------------------------
+* -------
 * output: polished notes and anki flashcards
 
 [1/28/26 - 2/3/26]
 exercism’s rust track (a week)
 * 99 exercises
-* -----------------------------------------------------
+* -------
 * output: more polished notes, more anki flashcards and mostly coding from memory
 
 [2/4/26 - 2/10/26]
 project (a week)
 * slatedb 
-* ----------------------
+* -------
 * output: decent 1-2 PRs
 
