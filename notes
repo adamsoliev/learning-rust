@@ -718,3 +718,65 @@ Integration tests:
 
 CANNOT integration test binary crates directly - put logic in src/lib.rs,
 keep main.rs thin.
+
+
+FUNCTIONAL FEATURES
+==================
+
+Closures
+--------
+
+Anonymous functions that can capture their env, can be saved in a variable
+or passed as arguments to other functions.
+
+Syntax:
+
+        fn  add_one      (x: u32) -> u32 { x + 1 }  // function
+        let add_one_v1 = |x: u32| -> u32 { x + 1 }; // fully annotated closure
+        let add_one_v2 = |x|             { x + 1 }; // inferred types
+        let add_one_v3 = |x|               x + 1  ; // minimal
+
+Types inferred from first use, then locked in.
+
+Capturing Environment:
+
+Three modes (compiler chooses minimum needed):
+
+- immutable borrow     || println!("{list:?}")
+- mutable borrow       || list.push(7)
+- take ownership       move || println!("{list:?}")
+
+move keyword forces ownership transfer (required for threads).
+
+Fn Traits:
+
+Compiler infers Fn traits based on closure body:
+
+- FnOnce   all closures; moves out captured values (callable once)
+- FnMut    doesn't move out; may mutate (callable multiple times)
+- Fn       no move, no mutate (safe for concurrent calls)
+
+Iterators
+---------
+
+Abstraction to process sequence of items; lazy by default.
+
+Iterator Trait:
+
+        pub trait Iterator {
+            type Item;
+            fn next(&mut self) -> Option<Self::Item>;
+        }
+
+Only next() is required; returns Some(item) or None when done.
+
+Creating Iterators:
+
+- iter()        immutable refs
+- iter_mut()    mutable refs
+- into_iter()   takes ownership, returns owned values
+
+Adapter Types:
+
+- consuming adapters (eg sum)   call next(), consume the iterator
+- iterator adapters (eg map)    produce different iterators; often take closures
