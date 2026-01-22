@@ -10,6 +10,7 @@ TOOLING
     - C compiler    some packages depend on C code
 - rust-analyzer     IDE support
 - rustfmt           automatic formatter
+- rustdoc           documentation generator
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -23,9 +24,11 @@ Commands
         cargo build                         build debug
         cargo build --release               build release
         cargo run                           build and run
+        cargo run -p <name>                 build and run named package in workspace
         cargo check                         quickly check if compiles
         cargo doc --open                    open docs for all dependencies locally
         cargo test                          build test runner, run annotated functions
+        cargo test -p <name>                build test runner, run annotated functions of named package in workspace
         cargo test -- --test-threads=1      run all tests sequentially
         cargo test -- --show-output         show printed output for passing tests
         cargo test <test_name>              run specific test
@@ -780,3 +783,45 @@ Adapter Types:
 
 - consuming adapters (eg sum)   call next(), consume the iterator
 - iterator adapters (eg map)    produce different iterators; often take closures
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+CARGO AND CRATES.IO
+===================
+
+Profiles
+--------
+
+- dev by default; release with --release flag
+- controlled with [profile.*] in Cargo.toml
+
+Documentation
+-------------
+
+- ///   doc comment for following item (supports Markdown)
+- //!   doc comment for containing item (crate/module)
+- `cargo doc --open`    generate and view HTML docs
+- `cargo test`          runs examples in docs as tests.
+
+Flatten deep hierarchies for convenient public API with `pub use`:
+```
+pub use self::kinds::PrimaryColor;
+pub use self::utils::mix;
+```
+
+Workspaces
+----------
+
+A workspace is a set of packages that share the same Cargo.lock and target directory
+
+        ├── Cargo.lock          shared; minimizes dependencies
+        ├── Cargo.toml          workspace config
+        ├── add_one             eg lib crate
+        │   ├── Cargo.toml
+        │   └── src
+        │       └── lib.rs
+        ├── adder               eg binary crate
+        │   ├── Cargo.toml
+        │   └── src
+        │       └── main.rs
+        └── target              all compiled artifacts placed here
