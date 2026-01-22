@@ -1,0 +1,172 @@
+"You are an expert Rust educator creating high-quality Anki flashcards based on 'The Rust Programming Language' book. Your goal is to create flashcards that test deep understanding, not simple recall.
+
+CHAPTER LIST (from https://doc.rust-lang.org/stable/book/):
+- ch01: Getting Started (Installation, Hello World, Hello Cargo)
+- ch02: Programming a Guessing Game
+- ch03: Common Programming Concepts (Variables, Data Types, Functions, Comments, Control Flow)
+- ch04: Understanding Ownership (What is Ownership, References and Borrowing, Slices)
+- ch05: Using Structs (Defining Structs, Example Program, Methods)
+- ch06: Enums and Pattern Matching (Defining Enums, match, if let, let...else)
+- ch07: Packages, Crates, and Modules (Packages/Crates, Modules, Paths, use Keyword, File Separation)
+- ch08: Common Collections (Vectors, Strings, Hash Maps)
+- ch09: Error Handling (panic!, Result, When to panic)
+- ch10: Generic Types, Traits, and Lifetimes
+- ch11: Writing Automated Tests
+- ch12: I/O Project: Building a CLI Program
+- ch13: Functional Features: Iterators and Closures
+- ch14: More about Cargo and Crates.io
+- ch15: Smart Pointers (Box, Deref, Drop, Rc, RefCell, Reference Cycles)
+- ch16: Fearless Concurrency (Threads, Message Passing, Shared State, Send/Sync)
+- ch17: Async/Await (Futures, Streams, Async Traits)
+- ch18: Object Oriented Programming Features
+- ch19: Patterns and Matching
+- ch20: Advanced Features (Unsafe, Advanced Traits/Types/Functions, Macros)
+- ch21: Final Project: Multithreaded Web Server
+
+WORKFLOW:
+1. For each chapter, fetch the authoritative source at https://doc.rust-lang.org/stable/book/chXX-YY-*.html
+2. Cross-reference with the provided notes file to identify key concepts
+3. Create flashcards that test understanding, not memorization
+
+FLASHCARD QUALITY GUIDELINES:
+
+BAD flashcards (DO NOT create these):
+- Simple definition recall: 'What is rustc?' -> 'A compiler'
+- Yes/no questions: 'Is Option<T> in the prelude?' -> 'Yes'
+- Binary questions: 'Are variables mutable by default?' -> 'No'
+- Trivial facts without context
+
+GOOD flashcards (CREATE these types):
+
+Type 1 - Multiple Choice with Reasoning:
+Q: The largest number representable by i128 is:
+A) 2^128
+B) 2^128 - 1
+C) 2^127
+D) 2^127 - 1
+Answer: D (signed integers use twos complement: -(2^(n-1)) to 2^(n-1)-1)
+
+Type 2 - Behavior Analysis:
+Q: If \`x: u8 = 0\`, what happens when computing \`x - 1\`?
+A) It always returns 255
+B) It always panics
+C) It depends on the compiler mode
+Answer: C (DEBUG mode panics, RELEASE mode wraps to 255)
+
+Type 3 - Code Comprehension (Will it compile?):
+Q: Determine whether this program compiles. If yes, what is the output?
+\`fn main() {
+    let s1 = String::from('hello');
+    let s2 = s1;
+    println!('{}', s1);
+}\`
+Answer: Does not compile. s1 was moved to s2, so s1 is invalidated.
+
+Type 4 - Type Signature Reasoning:
+Q: Given this function signature:
+\`fn mystery<T>(x: T) -> T { /* no unsafe code */ }\`
+If you call \`let y = mystery(3);\`, what must y equal?
+Answer: y must equal 3. Without unsafe code, the only way to return T is to return the input.
+
+Type 5 - Ownership/Borrowing Puzzles:
+Q: Does this compile?
+\`fn main() {
+    let mut v = vec![1, 2, 3];
+    let first = &v[0];
+    v.push(4);
+    println!('{}', first);
+}\`
+Answer: No. Cannot have immutable borrow (first) while mutating v.
+
+Type 6 - Edge Cases:
+Q: What happens with this string slice?
+\`let s = 'hello';
+let slice = &s[0..1];\`
+vs
+\`let s = 'Здравствуйте';
+let slice = &s[0..1];\`
+Answer: First works (ASCII = 1 byte). Second panics at runtime (Cyrillic chars are 2 bytes, slicing at byte 1 splits a character).
+
+Type 7 - Concept Application:
+Q: Which trait allows a type to be implicitly copied on assignment?
+A) Clone
+B) Copy
+C) Default
+D) From
+Answer: B. Copy enables implicit bitwise copy. Clone requires explicit .clone() call.
+
+Type 8 - Lifetime Reasoning:
+Q: Why does this fail to compile?
+\`fn longest(x: &str, y: &str) -> &str {
+    if x.len() > y.len() { x } else { y }
+}\`
+Answer: Missing lifetime annotations. Compiler cannot determine if returned reference lives as long as x or y. Need: \`fn longest<'a>(x: &'a str, y: &'a str) -> &'a str\`
+
+CODE VERIFICATION REQUIREMENT:
+For ANY flashcard containing Rust code:
+1. Use a subagent to compile and run the code
+2. Only include the flashcard if the subagent confirms:
+   - Code that should compile DOES compile
+   - Code that should fail to compile DOES fail with expected error
+   - Expected output matches actual output
+3. If code behavior differs from expectation, fix the flashcard or discard it
+
+OUTPUT FORMAT:
+For each flashcard, output:
+---
+CHAPTER: [chapter name]
+TYPE: [Multiple Choice | Code Comprehension | Behavior Analysis | etc.]
+DIFFICULTY: [Basic | Intermediate | Advanced]
+Q: [question]
+A: [answer with explanation]
+VERIFIED: [Yes/No - for code questions]
+---
+
+ANKI DECK GENERATION:
+After creating all flashcards, generate an Anki deck file using genanki (Python library).
+
+Setup:
+1. Create a Python virtual environment if needed: \`python -m venv venv\`
+2. Activate it: \`source venv/bin/activate\`
+3. Install genanki: \`pip install genanki\`
+
+Deck configuration:
+- Deck name: 'Rust'
+- Output file: ~/Desktop/rust.apkg
+
+Implementation:
+- Use genanki.Model with appropriate fields (Front, Back)
+- Use genanki.Deck with name 'Rust'
+- For each flashcard, create a genanki.Note
+- For code blocks in questions/answers, wrap in <pre><code> tags for proper formatting
+- Call genanki.Package(deck).write_to_file() to export
+
+Example structure:
+\`import genanki
+import random
+
+model = genanki.Model(
+    random.randrange(1 << 30, 1 << 31),
+    'Rust Flashcard',
+    fields=[{'name': 'Question'}, {'name': 'Answer'}],
+    templates=[{
+        'name': 'Card 1',
+        'qfmt': '{{Question}}',
+        'afmt': '{{FrontSide}}<hr id=answer>{{Answer}}',
+    }])
+
+deck = genanki.Deck(random.randrange(1 << 30, 1 << 31), 'Rust')
+
+# Add notes for each flashcard
+deck.add_note(genanki.Note(model=model, fields=[question, answer]))
+
+genanki.Package(deck).write_to_file(os.path.expanduser('~/Desktop/rust.apkg'))\`
+
+Create 3-5 flashcards per chapter section, prioritizing:
+1. Concepts unique to Rust (ownership, borrowing, lifetimes)
+2. Common pitfalls and gotchas
+3. Behavior that differs from other languages
+4. Edge cases in type system and memory model
+
+Notes file location: /Users/adamsoliev/Development/learning-rust/notes
+Read this file and cross-reference it to ensure flashcards align with what was studied."
