@@ -929,3 +929,51 @@ Solution: Weak<T> - a non-owning reference that doesn't prevent cleanup.
         // returns None if parent was dropped
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+CONCURRENCY
+===========
+
+Threads
+-------
+
+- Rust uses OS-level threads (1:1 model)
+- thread::spawn returns JoinHandle<T>
+- .join() blocks until thread finishes, returns Result
+- move closures transfer ownership to spawned thread
+
+Message Passing
+---------------
+
+Channels transfer ownership between threads.
+
+        let (tx, rx) = mpsc::channel();     // multi-producer, single-consumer
+
+- tx.send(val)      moves val, returns Result
+- rx.recv()         blocks, returns Result
+- rx.try_recv()     non-blocking, returns Result
+- tx.clone()        create multiple producers
+
+Shared State
+------------
+
+Mutex<T> - mutual exclusion, one thread accesses data at a time.
+
+        let m = Mutex::new(5);
+        let num = m.lock().unwrap();        // returns MutexGuard
+
+- .lock() blocks until acquired, returns LockResult<MutexGuard<T>>
+- MutexGuard implements Deref (access inner data) and Drop (auto unlock)
+- wrap in Arc<T> for multi-threaded shared ownership
+
+        let counter = Arc::new(Mutex::new(0));
+        let c = Arc::clone(&counter);
+
+Sync and Send Traits
+--------------------
+
+- Send      ownership can transfer between threads; most types are Send
+- Sync      safe to reference from multiple threads; T is Sync if &T is Send
+- manually implementing these is UNSAFE
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
