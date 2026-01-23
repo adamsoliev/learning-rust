@@ -825,3 +825,107 @@ A workspace is a set of packages that share the same Cargo.lock and target direc
         │   └── src
         │       └── main.rs
         └── target              all compiled artifacts placed here
+
+
+
+SMART POINTERS
+==============
+
+Traits
+------
+
+Smart pointers implement the Deref and Drop traits.
+
+Deref - allows smart pointers to be deref'd like regular references
+
+        *y              // what you write
+        *(y.deref())    // what Rust runs
+
+Deref coercion - auto-converts references when types don't match function params,
+calling Deref::deref as many times as necessary.
+
+        fn hello(name: &str) { ... }
+
+        let m = MyBox::new(String::from("Rust"));
+        hello(&m);                              // &MyBox -> &String -> &str
+        // hello(&(*m)[..]);                    // without coercion
+
+Coercion rules:
+
+        &T     -> &U       when T: Deref<Target=U>
+        &mut T -> &mut U   when T: DerefMut<Target=U>
+        &mut T -> &U       when T: Deref<Target=U>      (mut to immut OK)
+
+Note: &T -> &mut T is NEVER allowed (violates borrowing rules).
+Resolved at compile time, zero runtime cost.
+
+Drop - auto cleanup when out of scope; use std::mem::drop for early drop.
+
+Box<T>
+------
+
+- single owner
+- many immutable refs or one mutable ref at a time
+- checked at compile time
+- useful when indirection and heap allocation are the only features needed
+
+Rc<T>
+-----
+
+- multiple owners via reference counting
+- immutable refs only, checked at compile time
+- single-threaded only (use Arc<T> for multithreaded)
+
+        Rc::clone(&a)           // cheap: increments count only
+        a.clone()               // expensive: deep copy
+
+        Rc::strong_count(&a)    // get current count
+        Rc::weak_count(&a)      // for Weak refs
+
+        Rc::downgrade -> Weak<T> -> upgrade -> Option<Rc<T>>
+
+RefCell<T>
+----------
+
+- single owner
+- many immutable refs or one mutable ref at a time
+- checked at RUNTIME (panics on violation)
+- single-threaded only (use Mutex<T> for multithreaded)
+- interior mutability: mutate value even when RefCell itself is immutable
+
+        borrow()        -> Ref<T>       // immutable borrow
+        borrow_mut()    -> RefMut<T>    // mutable borrow
+
+Common pattern: Rc<RefCell<T>> for multiple owners of mutable data.
+
+Reference Cycles
+----------------
+
+Rc<T> + RefCell<T> can create cycles where items refer to each other,
+count never reaches 0, memory leaked forever.
+
+Solution: Weak<T> - a non-owning reference that doesn't prevent cleanup.
+
+        // PROBLEM: child points back to parent with Rc, cycle forms
+        struct Node {
+            parent: RefCell<Option<Rc<Node>>>,      // strong ref = leak
+            children: RefCell<Vec<Rc<Node>>>,
+        }
+
+        // SOLUTION: child uses Weak for parent
+        struct Node {
+            parent: RefCell<Option<Weak<Node>>>,    // weak ref = no cycle
+            children: RefCell<Vec<Rc<Node>>>,
+        }
+
+        // parent owns children (Rc), children reference parent (Weak)
+        let parent = Rc::new(Node { .. });
+        let weak_ref = Rc::downgrade(&parent);      // Weak<Node>
+
+        // later, to use parent from child:
+        if let Some(p) = weak_ref.upgrade() {       // Option<Rc<Node>>
+            // parent still exists, use p
+        }
+        // returns None if parent was dropped
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
